@@ -1,3 +1,5 @@
+from smart_tv_server import SmartTV
+tv = SmartTV()
 import socket
 
 def main():

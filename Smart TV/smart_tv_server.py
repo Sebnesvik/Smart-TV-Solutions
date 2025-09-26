@@ -1,37 +1,54 @@
 import socket
 
-tv_on = False
-current_channel = 1
-total_channels = 10
+class SmartTV:
+    def __init__(self, num_channels=10):
+        self.is_on = False
+        self.current_channel = 1
+        self.num_channels = num_channels
 
-def handle_command(cmd):
-    global tv_on, current_channel
-    cmd = cmd.strip().upper()
+    def handle_command(self, cmd):
+        parts = cmd.split()
+        if not parts:
+            return "UNKNOWN COMMAND"
 
-    if cmd == "TURN_ON":
-        tv_on = True
-        return "TV is now ON"
-    elif cmd == "TURN_OFF":
-        tv_on = False
-        return "TV is now OFF"
-    elif cmd == "IS_ON":
-        return "ON" if tv_on else "OFF"
-    elif not tv_on:
-        return "TV is OFF. Please turn it ON first."
-    elif cmd == "GET_CHANNEL":
-        return str(current_channel)
-    elif cmd == "CHANNEL_UP":
-        if current_channel < total_channels:
-            current_channel += 1
-        return str(current_channel)
-    elif cmd == "CHANNEL_DOWN":
-        if current_channel > 1:
-            current_channel -= 1
-        return str(current_channel)
-    else:
-        return "UNKNOWN COMMAND"
+        command = parts[0].upper()
+        args = parts[1:]
+
+        if not self.is_on and command not in ["TURN_ON", "IS_ON"]:
+            return "TV is OFF. Please turn it ON first."
+
+        if command == "TURN_ON":
+            self.is_on = True
+            return "TV is now ON"
+        elif command == "TURN_OFF":
+            self.is_on = False
+            return "TV is now OFF"
+        elif command == "IS_ON":
+            return "ON" if self.is_on else "OFF"
+        elif command == "GET_CHANNEL":
+            return str(self.current_channel)
+        elif command == "CHANNEL_UP":
+            if self.current_channel < self.num_channels:
+                self.current_channel += 1
+            return str(self.current_channel)
+        elif command == "CHANNEL_DOWN":
+            if self.current_channel > 1:
+                self.current_channel -= 1
+            return str(self.current_channel)
+        elif command == "SET_CHANNEL":
+            if len(args) != 1 or not args[0].isdigit():
+                return "ERROR: SET_CHANNEL requires a channel number"
+            ch = int(args[0])
+            if 1 <= ch <= self.num_channels:
+                self.current_channel = ch
+                return str(self.current_channel)
+            else:
+                return "ERROR: Channel out of range"
+        else:
+            return "UNKNOWN COMMAND"
 
 def main():
+    tv = SmartTV()
     s = socket.socket()
     s.bind(("127.0.0.1", 1238))
     s.listen(1)
@@ -42,7 +59,7 @@ def main():
         data = conn.recv(1024).decode()
         if not data:
             break
-        response = handle_command(data)
+        response = tv.handle_command(data)
         conn.sendall(response.encode())
     conn.close()
     s.close()
