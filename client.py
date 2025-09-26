@@ -18,9 +18,9 @@ def receive_data(socket, buffer_size=4096):
     return socket.recv(buffer_size).decode()
 
 def main():
-    host = 'example.com'
-    port = 80
-    message = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n"
+    host = "0.0.0.0"
+    port = 5000
+    message = "Hello, server!"
     try:
         socket = create_client_socket()
         connect_to_server(socket, host, port)
