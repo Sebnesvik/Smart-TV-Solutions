@@ -13,6 +13,7 @@ def main():
         "GET_CHANNEL",
         "CHANNEL_UP",
         "CHANNEL_DOWN",
+        "SET_CHANNEL 1 - 10",
         "TURN_OFF",
     ]
 

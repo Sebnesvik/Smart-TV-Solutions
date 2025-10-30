@@ -1,4 +1,5 @@
 import socket
+import threading
 
 class SmartTV:
     def __init__(self, num_channels=10):
@@ -47,22 +48,39 @@ class SmartTV:
         else:
             return "UNKNOWN COMMAND"
 
+def handle_client(conn, tv):
+    try:
+        while True:
+            data = conn.recv(1024).decode()
+            if not data:
+                break
+            response = tv.handle_command(data)
+            conn.sendall(response.encode())
+    except Exception as e:
+        print(f"An error occurred with a client {e}")
+    finally:
+        conn.close()
+
+
 def main():
     tv = SmartTV()
     s = socket.socket()
     s.bind(("127.0.0.1", 1238))
-    s.listen(1)
-    print("TV server running")
-    conn, addr = s.accept()
-    print("Connected:", addr)
-    while True:
-        data = conn.recv(1024).decode()
-        if not data:
-            break
-        response = tv.handle_command(data)
-        conn.sendall(response.encode())
-    conn.close()
-    s.close()
+    s.listen(5)
+    print("TV server running and accepting multiple clients")
+
+    try:
+        while True:
+            conn, addr = s.accept()
+            print(f"Connected to client: {addr}")
+            client_thread = threading.Thread(target=handle_client, args=(conn, tv))
+            client_thread.daemon = True
+            client_thread.start()
+    except Exception as e:
+        print(f"An error occurred in the server: {e}")
+    finally:
+        s.close()
+
 
 if __name__ == "__main__":
     main()
